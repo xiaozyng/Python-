@@ -31,7 +31,7 @@ pipeline {
         stage('部署代码') {
             steps {
                 echo "starting deploy......"
-                sh "cd /data/git/playbooks && ansible-playbook -i inventory/stagin site.yaml"
+                sh "cd /data/git/playbooks && ansible-playbook -i inventory/staging site.yaml"
             }
         }
 
