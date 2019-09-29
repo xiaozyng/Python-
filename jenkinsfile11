@@ -1,0 +1,70 @@
+#!groovy
+pipeline {
+    agent any
+    parameters {
+        string(name:'repoUrl', defaultValue:'git@github.com:xiaozyng/Python-.git', description:'git仓库地址')
+        string(name:'repoBranch', defaultValue:'master', description:'git分支')
+        choice(name:'server', choices:'192.168.1.107,9090,${username},${password}\n192.168.1.60,9090,*****,*****', description: '测试服务器列表选择(IP,JettyPort,Name,Passwd)')
+        string(name:'warLocation', defaultValue:'Python-/*.py', description:'python包的相对路径 ')
+        booleanParam(name:'isCommitQA', description:'是否邮件通知测试人员进行人工验收', defaultValue: false)
+    }   
+    environment {
+        CRED_ID = 'ab28a3db-7c09-41d8-a046-b30606999892'
+        SA_EMAIL = 'xiaozyong@foxmail.com'
+    }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        withCredentials([usernamePassword(credentialsId: 'b7b9f883-24c8-4909-9ead-d05d0066fd1e', passwordVariable: 'password', usernameVariable: 'username')])    }
+    triggers {
+        pollSCM('H * * * 1-5')
+    }
+    stages {
+        stage('代码获取') {
+            steps {
+                script {
+                    def split=params.server.split(",")
+                    echo split
+                    serverIP = split[0]
+                    jettyPort = split[1]
+                    serverName = split[2]
+                    serverPasswd = split[3]
+                } 
+            echo "starting fetchCode from ${params.repoUrl}......"
+            git credentialsId:CRED_ID, url:params.repoUrl, branch:params.repoBranch
+            }
+        }
+        
+        stage('部署代码') {
+            steps {
+                echo "starting deploy to ${serverIP}......"
+                script {
+                    wrap([$class: 'BuildUser']) {
+                        sh "sshpass -p ${serverPasswd} scp ${params.warLocation} ${serverName}@${serverIP}:apps/" 
+                    
+                        Date date = new Date()
+                        def deploylog="${date.toString()},${BUILD_USER} use pipeline  '${JOB_NAME}(${BUILD_NUMBER})' deploy branch ${params.repoBranch} to server ${serverIP}"
+                        println deploylog
+                        sh "echo ${deploylog} >>${WORKSPACE}/deploy.log"
+                        sh "sshpass -p ${serverPasswd} scp ${WORKSPACE}/deploy.log ${serverName}@${serverIP}:logs/"
+                    }
+                }
+            }
+        }   
+
+        stage('通知人工验收'){
+            steps{
+                script{
+                    wrap([$class: 'BuildUser']) {
+                        if(params.isCommitQA==false){
+                            echo "不需要通知测试人员人工验收"
+                        }else{
+                            mail to: "${QA_EMAIL}",
+                            subject: "PineLine '${JOB_NAME}' (${BUILD_NUMBER})人工验收通知",
+                            body: "${BUILD_USER}提交的PineLine '${JOB_NAME}' (${BUILD_NUMBER})进入人工验收环节\n请及时前往${env.BUILD_URL}进行测试验收"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

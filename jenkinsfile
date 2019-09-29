@@ -1,11 +1,39 @@
-Jenkinsfile (Declarative Pipeline)
+#!groovy
 pipeline {
     agent any
+    parameters {
+        string(name:'repoUrl', defaultValue:'https://github.com/xiaozyng/Python-.git', description:'git仓库地址')
+        string(name:'repoBranch', defaultValue:'master', description:'git分支')
+        string(name:'warLocation', defaultValue:'Python-/*.py', description:'python包的相对路径 ')
+        booleanParam(name:'isCommitQA', description:'是否邮件通知测试人员进行人工验收', defaultValue: false)
+    }
+    environment {
+        CRED_ID = 'ab28a3db-7c09-41d8-a046-b30606999892'
+        SA_EMAIL = 'xiaozyong@foxmail.com'
+    }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+
+    triggers {
+        pollSCM('H * * * 1-5')
+    }
+
     stages {
-        stage('build') {
+        stage('代码获取') {
             steps {
-                sh 'python --version'
+                sh 'id;pwd'
+                echo "starting fetchCode from ${params.repoUrl}......"
+                git credentialsId:CRED_ID, url:params.repoUrl, branch:params.repoBranch
             }
         }
+
+        stage('部署代码') {
+            steps {
+                echo "starting deploy......"
+                sh "cd /data/git/playbooks && ansible-playbook -i inventory/stagin site.yaml"
+            }
+        }
+
     }
 }
