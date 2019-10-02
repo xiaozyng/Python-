@@ -15,7 +15,7 @@ pipeline {
     environment {
         CRED_ID = 'ab28a3db-7c09-41d8-a046-b30606999892'
         SA_EMAIL = 'xiaozyong@foxmail.com'
-        WORK_SPACE_DIR = "${env.JOB_NAME}/${env.BUILD_NUMBER}"
+        WORK_SPACE_DIR = "${JENKINS_HOME}/${env.JOB_NAME}/${env.BUILD_NUMBER}"
     }
     options {
         buildDiscarder(logRotator(numToKeepStr: '10'))
@@ -38,7 +38,6 @@ pipeline {
             steps {
                 echo "starting deploy......"
                 echo "${WORK_SPACE_DIR}"
-                sh "env"
                 sh "sed -i 's@WORKSPACEDIR@${WORK_SPACE_DIR}@g' /data/git/playbooks/group_vars/all"
                 sh "cd /data/git/playbooks && ansible-playbook -i inventory/staging site.yaml"
             }
