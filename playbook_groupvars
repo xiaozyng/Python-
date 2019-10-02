@@ -1,0 +1,5 @@
+src_app_path: WORKSPACEDIR
+dest_app_path: /usr/local/apps/
+app_owner: admin
+app_group: admin
+app_mode: 0755
