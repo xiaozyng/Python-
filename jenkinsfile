@@ -34,6 +34,12 @@ pipeline {
                 sh "cd /data/git/playbooks && ansible-playbook -i inventory/staging site.yaml"
             }
         }
+        
+        stage('自动测试') {
+            steps {
+                print('starting question automachine')
+            } 
+        }
 
     }
 }
