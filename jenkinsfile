@@ -15,7 +15,7 @@ pipeline {
     environment {
         CRED_ID = 'ab28a3db-7c09-41d8-a046-b30606999892'
         SA_EMAIL = 'xiaozyong@foxmail.com'
-        WORK_SPACE_DIR = "${env.JOB_NAME}/${env.BUILD_NUMBER}"
+        WORK_SPACE_DIR = "${env.path}/${env.JOB_NAME}/${env.BUILD_NUMBER}"
     }
     options {
         buildDiscarder(logRotator(numToKeepStr: '10'))
