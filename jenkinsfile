@@ -37,6 +37,7 @@ pipeline {
         stage('部署代码') {
             steps {
                 echo "starting deploy......"
+                echo "${WORK_SPACE_DIR}"
                 sh "sed -i 's@WORKSPACEDIR@${WORK_SPACE_DIR}@g' /data/git/playbooks/group_vars/all"
                 sh "cd /data/git/playbooks && ansible-playbook -i inventory/staging site.yaml"
             }
