@@ -1,6 +1,9 @@
 #!groovy
 pipeline {
-    agent any
+    agent node {
+        label 'master'
+        customWorkspace "${env.JOB_NAME}/${env.BUILD_NUMBER}"
+    }
     parameters {
         string(name:'repoUrl', defaultValue:'https://github.com/xiaozyng/Python-.git', description:'git仓库地址')
         string(name:'repoBranch', defaultValue:'master', description:'git分支')
